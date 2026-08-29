@@ -1,0 +1,14 @@
+{
+  "moodle": {
+    "url": "https://aula.usm.cl",
+    "token": ""
+  },
+  "descargas": {
+    "directorio_descargas": "",
+    "semestre": "2026-2",
+    "archivos_ignorados": ["Programa-de-estudio.pdf", "CREACIÓN DE CUESTIONARIO.docx", "Presentación_DEO_05-08.pdf"],
+    "carpetas_por_curso": {
+      "Nombre del Curso": "nombre de carpeta destino"
+    }
+  }
+}

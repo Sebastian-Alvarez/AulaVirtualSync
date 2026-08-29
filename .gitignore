@@ -1,7 +1,6 @@
 # Moodle Connector — .gitignore
 
-# Secrets & Config
-config.json
+# Secrets
 credentials.enc
 *.enc
 .env

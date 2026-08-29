@@ -127,20 +127,19 @@ class DiskCache:
 
 
 # ---------------------------------------------------------------------------
-# Microsoft OAuth2 authentication (browser-based / MSAL)
+# Moodle authentication (browser-based SSO via Mobile Launch Flow)
 # ---------------------------------------------------------------------------
 
 class MicrosoftAuthenticator:
     """
-    Handles Microsoft OAuth2 authentication for Moodle SSO.
+    Handles Moodle authentication via SSO.
 
     Strategy:
-    1. Try MSAL device-code flow (headless-friendly).
-    2. If a Playwright browser is available, use it for interactive MFA.
-    3. Cache the access token and refresh it automatically.
+    1. Stored username/password, if any (direct Moodle login).
+    2. Interactive browser login (Playwright) via Moodle's Mobile Launch Flow —
+       works with any SSO provider (Microsoft, Google, SAML, ...), not just Microsoft.
+    3. Manual token entry fallback.
     """
-
-    AUTH_BASE = "https://login.microsoftonline.com"
 
     def __init__(self, config: dict, cred_file: Path, password: str):
         self.config = config
@@ -171,28 +170,41 @@ class MicrosoftAuthenticator:
     # Token acquisition
     # ------------------------------------------------------------------
 
+    def _is_token_valid(self, base_url: str, token: str) -> bool:
+        """Check with the server whether a token is still accepted."""
+        url = f"{base_url.rstrip('/')}/webservice/rest/server.php"
+        try:
+            resp = requests.post(url, data={
+                "wstoken": token,
+                "wsfunction": "core_webservice_get_site_info",
+                "moodlewsrestformat": "json",
+            }, timeout=10)
+            data = resp.json()
+            return "sitename" in data
+        except Exception:
+            return False
+
     def get_moodle_token(self, base_url: str) -> str:
         """Return a valid Moodle web-service token, refreshing if needed."""
         # First, check if token is in config
-        if hasattr(self, 'config') and self.config.get("moodle", {}).get("web_service_token"):
-            token = self.config["moodle"]["web_service_token"]
+        if hasattr(self, 'config') and self.config.get("moodle", {}).get("token"):
+            token = self.config["moodle"]["token"]
             if token:
                 log.debug("Using Moodle token from config.")
                 return token
-        
+
         creds = self._load_credentials()
         token = creds.get("moodle_token")
-        expires = creds.get("moodle_token_expires", 0)
 
-        if token and time.time() < expires:
-            log.debug("Using cached Moodle token.")
-            return token
+        if token:
+            if self._is_token_valid(base_url, token):
+                log.debug("Cached Moodle token validated by server.")
+                return token
+            log.info("Moodle token rejected by server — re-authenticating...")
 
         # Need to (re)authenticate
-        log.info("Moodle token missing or expired — starting authentication...")
         token = self._authenticate_moodle(base_url, creds)
         creds["moodle_token"] = token
-        creds["moodle_token_expires"] = time.time() + 3600 * 8  # 8h TTL
         self._save_credentials(creds)
         return token
 
@@ -302,7 +314,7 @@ class MicrosoftAuthenticator:
             log.warning(
                 "No display detected — cannot open browser for SSO login. "
                 "Run 'python moodle_connector.py login' on a machine with a display "
-                "to cache the token, or set 'web_service_token' in config.json manually."
+                "to cache the token, or set 'token' in config.json manually."
             )
             return None
 
@@ -463,7 +475,7 @@ class MicrosoftAuthenticator:
             "Options:\n"
             "  1. Run 'python moodle_connector.py login' on a machine with a display "
             "to cache the token in credentials.enc, then copy it to this environment.\n"
-            "  2. Set 'web_service_token' in config.json with a valid token."
+            "  2. Set 'token' in config.json with a valid token."
         )
 
     def store_credentials(self, username: str = "", password: str = "", email: str = "") -> None:
@@ -659,7 +671,7 @@ class MoodleAPI:
         sep = "&" if "?" in file_url else "?"
         url_with_token = f"{file_url}{sep}token={self.token}"
 
-        log.info("Downloading: %s → %s", file_url, dest.name)
+        log.debug("Downloading: %s → %s", file_url, dest.name)
         try:
             with self.session.get(url_with_token, stream=True, timeout=60) as r:
                 r.raise_for_status()
@@ -832,9 +844,9 @@ class MoodleConnector:
 
     def __init__(self, config_path: Path = CONFIG_FILE, password: Optional[str] = None):
         self.config = self._load_config(config_path)
-        self.base_url = self.config["moodle"]["base_url"]
+        self.base_url = self.config["moodle"]["url"]
         self.password = password or self._prompt_password()
-        self.cache = DiskCache(CACHE_DIR / "api", default_ttl=self.config["cache"]["api_ttl_seconds"])
+        self.cache = DiskCache(CACHE_DIR / "api")
 
         self.auth = MicrosoftAuthenticator(
             config=self.config,
@@ -845,14 +857,10 @@ class MoodleConnector:
 
     def _load_config(self, path: Path) -> dict:
         if not path.exists():
-            # Copy template
-            template = SCRIPT_DIR / "config.template.json"
-            if template.exists():
-                import shutil
-                shutil.copy(template, path)
-                log.info("Created config.json from template. Please review it.")
-            else:
-                raise FileNotFoundError(f"Config file not found: {path}")
+            raise FileNotFoundError(
+                f"Config file not found: {path}\n"
+                "Edit config.json (see the README's 'Primeros pasos' section)."
+            )
         with path.open(encoding="utf-8") as f:
             return json.load(f)
 

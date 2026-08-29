@@ -1,94 +1,90 @@
----
-name: moodle-connector
-description: "Moodle REST API client, batch downloader, and MCP server for Claude Code integration"
-metadata: { "author": "Jabir Iliyas Suraj-Deen, Sebastian Guevara M.", "license": "MIT", "homepage": "https://github.com/Jabir-Srj/moodle-connector", "repository": "https://github.com/Jabir-Srj/moodle-connector.git", "tags": ["moodle", "education", "lms", "api", "batch-download", "mcp", "claude-code"] }
----
-
-> **English** | [Español](README.es.md)
-
 # Moodle Connector
 
-**Full-featured Moodle REST API client with batch downloading and MCP protocol support for Claude Code and OpenCode.**
+## Primeros pasos
 
-## Features
+Esta guía asume que no sabes programar — solo necesitas seguir los pasos en orden.
 
-**Complete Moodle API Access**
-- List courses, check grades, track assignments
-- Fetch materials, deadlines, announcements
-- Download files with aggressive caching
+#### Previamente: Instalar Python (solo la primera vez)
 
-**Microsoft SSO / MFA Support**
-- Automated Mobile Launch Flow (same as the official Moodle app)
-- Works with any SSO provider: Microsoft Azure AD, Google, SAML, etc.
-- Browser opens for interactive login - closes automatically once token is captured
+Si nunca has instalado Python en tu computador:
 
-**Multiple Integration Modes**
-- **CLI:** `python moodle_connector.py courses`
-- **Python Library:** `from moodle_connector import MoodleConnector`
-- **MCP Protocol:** Native integration with Claude Code, OpenCode, and OpenClaw
+Ve a [python.org/downloads](https://www.python.org/downloads/) y descarga la versión para Windows.
+* Al instalarlo, **marca la casilla que dice "Add Python to PATH"** antes de hacer clic en "Install Now"
 
-**Generic Batch Downloader**
-- JSON-driven configuration (zero code modification)
-- Works with any Moodle module
-- Auto-organized by course name
+### Paso 1: Descargar este proyecto
 
-**Security**
-- Encrypted credentials (PBKDF2 + Fernet)
-- Token management built-in
-- No secrets in git history
-- MIT licensed
+1. Arriba en esta página, haz clic en el botón verde **"Code"** → **"Download ZIP"**.
+2. Busca el archivo `.zip` descargado y extráelo.
+3. Entra a la carpeta que se creó.
 
-## Installation
+### Paso 2: Configurar
 
-Once installed via `clawhub install moodle-connector`:
 
-```bash
-cd ./skills/moodle-connector
-pip install -r requirements.txt
-python -m playwright install chromium
-```
+2. Abre `config.json` con el Bloc de notas (o cualquier IDE).
+3. Busca la línea `"url": "https://aula.usm.cl",` y reemplaza esa dirección por la de tu Aula <span style="color: grey; font-size: 0.9em;">(por defecto ya viene con la de la USM)</span>
+5. Guarda el archivo (Ctrl+S).
 
-## Quick Start
 
-### 1. Configure
+### Paso 3: Ejecutar el programa
 
-```bash
-cp config.template.json config.json
-# Edit config.json: set base_url to your Moodle instance
-```
+1. Haz doble clic en `sync_files.bat`.
+3. Se abrirá una ventana negra (la terminal) la primera vez tarda unos minutos, porque instala automáticamente todo lo que necesita.
+4. En algún momento te va a pedir una **contraseña de cifrado** — esta contraseña **te la inventas tú**, no es tu clave del Aula. Sirve para proteger, en tu propio computador, la sesión guardada. **Anótala en algún lado**.
+5. Se abrirá automáticamente una ventana del navegador, inicia sesión ahí como lo haces normalmente en tu universidad (usuario, contraseña, doble factor si te lo pide). La ventana se cierra sola cuando termina.
+6. El programa empieza a descargar los archivos nuevos de tus cursos a la carpeta definida. 
 
-### 2. Login (SSO / MFA)
+### Y para la próxima vez
 
-```bash
-MOODLE_CRED_PASSWORD=any-password python moodle_connector.py login
-```
+Solo repite el **Paso 3** 
+Doble clic en `sync_files.bat`. Como ya quedó todo instalado y configurado, va a ser mucho más rápido, y solo descarga los archivos que sean nuevos.
 
-A browser window will open. Complete your Microsoft (or other SSO) login and MFA normally - the window closes automatically once the token is captured. You should see:
+---
 
-```
-# ✅ Authentication Successful
-- User: Your Name
-- Site: Your Moodle Site
-- Moodle version: 4.x.x
-```
+Si prefieres usar la terminal directamente en vez del `.bat`, o quieres explorar otras opciones (consultar notas desde la línea de comandos, usarlo como librería de Python, integrarlo con Claude Code), sigue leyendo:
 
-> If your instance allows direct username/password login (no SSO), you can also run:
-> `python moodle_connector.py login --username you@email.com --user-password yourpassword`
+- **[Sincronización automática por curso](#sincronización-automática-por-curso)** — lo mismo que hace `sync_files.bat`, pero a mano
+- **[CLI](#cli)** — consulta cursos, notas, tareas, fechas límite desde la terminal
+- **[Librería Python](#librería-python)** — úsalo dentro de tus propios scripts
+- **[Integración MCP](#integración-mcp-claude-code--opencode--openclaw)** — úsalo como herramienta desde Claude Code / OpenCode
 
-### 3. Use CLI
+## Uso
+
+### Sincronización automática por curso
+
+`course_sync.py` le pregunta a Moodle el contenido de cada curso inscrito y detecta solo lo nuevo. Puedes correrlo las veces que quieras — solo descarga archivos nuevos.
 
 ```bash
-python moodle_connector.py courses        # List all courses
-python moodle_connector.py grades         # Check grades
-python moodle_connector.py assignments    # View assignments with deadlines
-python moodle_connector.py announcements  # Course announcements
+python course_sync.py --list-courses    # ver qué cursos detectó
+python course_sync.py --dry-run         # previsualizar sin descargar
+python course_sync.py                   # sincronizar todo
+python course_sync.py --course mi-clave # sincronizar solo un curso
+```
+
+Se configura bajo `descargas` en `config.json` (todos estos campos son opcionales):
+- `directorio_descargas` — carpeta local de destino. Soporta rutas con `%OneDrive%` si la escribes tú; si se deja vacío, usa `./downloads` dentro del proyecto.
+- `semestre` — ej. `"2026-2"`. Si se define, solo sincroniza cursos cuyo nombre en Moodle contenga el código `AAAANN` correspondiente. Si se omite, sincroniza todos los cursos inscritos.
+- `carpetas_por_curso` — palabra clave del nombre del curso → carpeta local.
+- `archivos_ignorados` — patrones glob para ignorar archivos por nombre.
+- `dominios_acceso_directo` — dominios adicionales (además de SharePoint/Drive/YouTube/etc.) que siempre se guardan como acceso directo `.url`.
+
+Los links externos que parecen archivos reales (según su `Content-Type`) se descargan directo; el resto se guarda como acceso directo `.url`.
+
+En Windows, `sync_files.bat` es un wrapper de un clic (crea/activa `.venv`, instala dependencias, instala Chromium, corre `course_sync.py`). `sync_files.sh` hace lo mismo en Linux/macOS.
+
+### CLI
+
+```bash
+python moodle_connector.py courses        # Listar todos los cursos
+python moodle_connector.py grades         # Consultar notas
+python moodle_connector.py assignments    # Ver tareas con fechas límite
+python moodle_connector.py announcements  # Anuncios de los cursos
 python moodle_connector.py materials --course-id 12345
-python moodle_connector.py deadlines      # Upcoming calendar events
-python moodle_connector.py download "https://your-moodle-site.example.com/..." --output myfile.pdf
-python moodle_connector.py summary        # Full markdown export (all data)
+python moodle_connector.py deadlines      # Eventos próximos del calendario
+python moodle_connector.py download "https://tu-moodle.ejemplo.com/..." --output archivo.pdf
+python moodle_connector.py summary        # Exportación completa en markdown
 ```
 
-### 4. Use Python Library
+### Librería Python
 
 ```python
 from moodle_connector import MoodleConnector
@@ -96,7 +92,7 @@ from pathlib import Path
 
 connector = MoodleConnector(
     config_path=Path('config.json'),
-    password='encryption-password'
+    password='contraseña-de-cifrado'
 )
 
 courses = connector.courses()
@@ -107,187 +103,175 @@ deadlines = connector.deadlines()
 announcements = connector.announcements()
 content = connector.summary()
 
-# Download with caching
+# Descarga con caché
 file_content = connector.download("https://...")
 ```
 
-### 5. Batch Download (Any Module)
+## Características
 
-```bash
-cp downloads.example.json downloads.json
-# Edit downloads.json to add modules and file URLs
-python batch_downloader.py
-```
+**Acceso completo a la API de Moodle**
+- Listar cursos, consultar notas, seguir tareas
+- Obtener materiales, fechas límite, anuncios
+- Descargar archivos con caché agresiva
 
-**Output Structure:**
-```
-downloads/
-├── Your_Module_Name_1/
-│   ├── file1.pdf
-│   ├── file2.zip
-│   └── ...
-└── Your_Module_Name_2/
-    ├── lecture.pdf
-    └── ...
-```
+**Soporte SSO / MFA**
+- Mobile Launch Flow automatizado (el mismo que usa la app oficial de Moodle)
+- Compatible con cualquier proveedor SSO: Microsoft Azure AD, Google, SAML, etc.
+- El navegador se abre para el login interactivo y se cierra automáticamente al capturar el token
+
+**Múltiples modos de integración**
+- **CLI:** `python moodle_connector.py courses`
+- **Librería Python:** `from moodle_connector import MoodleConnector`
+- **Protocolo MCP:** Integración nativa con Claude Code, OpenCode y OpenClaw
+
+**Descarga automática**
+- `course_sync.py` auto-descubre archivos por curso inscrito, cero mantenimiento manual de listas
+
+**Seguridad**
+- Credenciales cifradas (PBKDF2 + Fernet)
+- Gestión de tokens integrada
+- Sin secretos en el historial de git
+- Licencia MIT
 
 ## Tampermonkey Token Helper
 
-If the connector is running on a headless server (no display), get the token from a PC or Mac with a browser and copy it over. Install the included userscript on that machine:
+Si el conector corre en un servidor headless (sin pantalla), obtén el token desde un PC o Mac con navegador y copialo al servidor. Instala el userscript incluido en esa máquina:
 
-1. Install [Tampermonkey](https://www.tampermonkey.net/) in your browser
-2. Open Tampermonkey - Create new script - paste the contents of [`moodle_token_helper.user.js`](moodle_token_helper.user.js)
-3. Navigate to your Moodle site while logged in
-4. Click the **"Get Token"** button (bottom right corner)
-5. Copy the token and paste it into `config.json` under `web_service_token`
+1. Instala [Tampermonkey](https://www.tampermonkey.net/) en tu navegador
+2. Abre Tampermonkey - Crear nuevo script - pega el contenido de [`moodle_token_helper.user.js`](moodle_token_helper.user.js)
+3. Navega a tu sitio Moodle con sesion activa
+4. Haz click en el boton **"Get Token"** (esquina inferior derecha)
+5. Copia el token y pegalo en `config.json` bajo `token`
 
-The script uses `GM_xmlhttpRequest` to call the Mobile Launch endpoint with your active session cookies and intercepts the `moodlemobile://` redirect without leaving the page.
+El script usa `GM_xmlhttpRequest` para llamar al endpoint Mobile Launch con tus cookies de sesion activas e intercepta el redirect `moodlemobile://` sin salir de la pagina.
 
-To support additional Moodle instances, add `@match` and `@connect` lines to the script header.
+Para agregar otras instancias Moodle, agrega lineas `@match` y `@connect` en el header del script.
 
-## How Authentication Works
+## Cómo funciona la autenticación
 
-This connector uses Moodle's **Mobile Launch Flow** - the same mechanism used by the official Moodle mobile app. It works with any SSO provider without needing API credentials or special server configuration.
+Este conector usa el **Mobile Launch Flow** de Moodle, el mismo mecanismo que usa la app oficial de Moodle. Funciona con cualquier proveedor SSO sin necesitar credenciales de API ni configuración especial en el servidor.
 
-**Flow:**
-1. Browser navigates to `/admin/tool/mobile/launch.php`
-2. If no session exists, Moodle redirects to the SSO provider (e.g. Microsoft)
-3. User completes login + MFA interactively
-4. SSO redirects back to Moodle, which issues a `moodlemobile://token=<base64>` redirect
-5. The connector intercepts this redirect, decodes the token, and closes the browser
+**Flujo:**
+1. El navegador navega a `/admin/tool/mobile/launch.php`
+2. Si no hay sesión activa, Moodle redirige al proveedor SSO (ej: Microsoft)
+3. El usuario completa el login + MFA de forma interactiva
+4. El SSO devuelve a Moodle, que emite un redirect `moodlemobile://token=<base64>`
+5. El conector intercepta este redirect, decodifica el token y cierra el navegador
 
-The token is cached in an encrypted file (`credentials.enc`) and reused until it expires.
+El token se guarda en un archivo cifrado (`credentials.enc`) y se reutiliza hasta que el servidor lo rechaza.
 
-## MCP Integration (Claude Code / OpenCode / OpenClaw)
+## Integración MCP (Claude Code / OpenCode / OpenClaw)
 
-**REQUIRED:** Set `MOODLE_CRED_PASSWORD` environment variable before starting Claude Code.
+**REQUERIDO:** Configurar la variable de entorno `MOODLE_CRED_PASSWORD` antes de iniciar Claude Code.
 
-Add to your `claude_desktop_config.json`:
+Agregar a tu `claude_desktop_config.json`:
 
 ```json
 {
   "mcpServers": {
     "moodle-connector": {
       "command": "python",
-      "args": ["./skills/moodle-connector/mcp_server.py"],
+      "args": ["/ruta/a/AulaVirtualSync/mcp_server.py"],
       "env": {
-        "MOODLE_CRED_PASSWORD": "your-encryption-password"
+        "MOODLE_CRED_PASSWORD": "tu-contraseña-de-cifrado"
       }
     }
   }
 }
 ```
 
-**Important:** Replace `your-encryption-password` with the actual password used when running `login`.
+**Importante:** Reemplazar `tu-contraseña-de-cifrado` con la misma contraseña usada al correr `login`.
 
-Restart Claude Code. All 8 Moodle functions are now available as native MCP tools:
-- `courses()` - List enrolled courses
-- `grades()` - Get grades
-- `assignments()` - Get assignments
-- `materials()` - Get course materials
-- `deadlines()` - Get upcoming deadlines
-- `announcements()` - Get course news
-- `download(url, output?)` - Download files
-- `summary()` - Get complete data export
+Reiniciar Claude Code. Las 8 funciones de Moodle estarán disponibles como herramientas MCP nativas:
+- `courses()` - Listar cursos inscritos
+- `grades()` - Obtener notas
+- `assignments()` - Obtener tareas
+- `materials()` - Obtener materiales del curso
+- `deadlines()` - Obtener próximas fechas límite
+- `announcements()` - Obtener novedades del curso
+- `download(url, output?)` - Descargar archivos
+- `summary()` - Exportación completa de datos
 
-## Configuration
+## Referencia de configuración
 
-### Moodle Token (`config.json`)
+### Token de Moodle (`config.json`)
 ```json
 {
   "moodle": {
-    "base_url": "https://your-moodle-site.example.com",
-    "web_service_token": ""
-  },
-  "cache": {
-    "api_ttl_seconds": 300
+    "url": "https://tu-moodle.ejemplo.com",
+    "token": ""
   }
 }
 ```
 
-Leave `web_service_token` empty to use the automated SSO login flow. Set it manually if you already have a token.
+Dejar `token` vacío para usar el flujo SSO automatizado. Completarlo manualmente solo si ya tienes un token.
 
-### Batch Downloader (`downloads.json`)
-```json
-{
-  "downloads": [
-    {
-      "module": "Machine Learning",
-      "course_id": 44864,
-      "files": [
-        {
-          "name": "Week1.zip",
-          "url": "https://your-moodle-site.example.com/webservice/pluginfile.php/..."
-        }
-      ]
-    }
-  ]
-}
-```
-
-## Requirements
+## Requisitos
 
 - Python 3.10+
 - requests ≥2.31.0
 - cryptography ≥41.0.0
 - playwright ≥1.40.0
-- mcp ≥0.1.0 (for MCP server)
+- mcp ≥0.1.0 (para el servidor MCP)
 
-## Supported Moodle Instances
+## Instancias de Moodle compatibles
 
-Tested with:
+Probado con:
 - Taylor's University (mytimes.taylors.edu.my)
-- Universidad Técnica Federico Santa María (aula.usm.cl) - Microsoft Azure AD SSO
-- Should work with any Moodle 3.x+ instance
+- Universidad Técnica Federico Santa María (aula.usm.cl)
+- Debería funcionar con cualquier instancia Moodle 3.x+
 
-## Security Notes
+## Notas de seguridad
 
-- **Environment-enforced:** `MOODLE_CRED_PASSWORD` is **required** - no hardcoded defaults
-- **Error sanitization:** MCP server sanitizes errors, no internal details leaked to clients
-- **Encrypted credentials:** PBKDF2 (480K iterations) + Fernet encryption
-- **Safe for headless:** Use `MOODLE_CRED_PASSWORD` env var for automation
-- **Git-safe:** Never commit `config.json` with real tokens
-- **No telemetry:** No external data transmission or logging
+- `MOODLE_CRED_PASSWORD` es **obligatorio** - sin valores por defecto hardcodeados
+- **Sanitización de errores:** El servidor MCP sanitiza los errores, sin filtración de detalles internos
+- **Credenciales cifradas:** PBKDF2 (480K iteraciones) + cifrado Fernet
+- **Apto para headless:** Usar la variable de entorno `MOODLE_CRED_PASSWORD` para automatización
+- **Seguro para git:** Nunca hacer commit de `config.json` con tokens reales
+- **Sin telemetría:** Sin transmisión de datos externos ni de logs
 
-## Troubleshooting
+## Solución de problemas
 
-### Browser opens but never closes
-The token redirect was not captured. Check if your University allows the usage of Moodle App.
+### El navegador se abre pero nunca se cierra
+El redirect del token no fue capturado. Verifica que tu universidad o institución educativa tenga activada la aplicación movil
 
-### "Invalid parameter value detected" for calendar API
-Use `assignments()` instead - gets same deadline info.
+### "BrowserType.launch: Executable doesn't exist"
+El binario del navegador de Playwright no está instalado — corre `python -m playwright install chromium`. `sync_files.bat`/`sync_files.sh` lo hacen automáticamente.
 
-### Token expired / login required again
-Delete `credentials.enc` and run `python moodle_connector.py login` again.
+### "Invalid parameter value detected" en la API de calendario
+Usar `assignments()` en su lugar, obtiene la misma información de fechas límite.
 
-### File download stuck
-Check network. Increase timeout in code or clear cache: `rm -rf cache/`
+### Token expirado / se pide login de nuevo
+Eliminar `credentials.enc` y ejecutar `python moodle_connector.py login` nuevamente.
 
-## License
+### Descarga de archivo detenida
+Verifica tu conexión a internet. Aumentar el timeout en el código o limpiar la caché: `rm -rf cache/`
 
-MIT - See LICENSE file for details. You are free to use, modify, and distribute this software.
+## Licencia
 
-## Contributing
+MIT - Ver el archivo LICENSE para más detalles. Eres libre de usar, modificar y distribuir este software.
 
-Contributions welcome! Please:
-1. Fork the repository
-2. Create a feature branch
-3. Submit a pull request
-4. Agree to license your work under GPLv3
+## Contribuir
 
-## Authors
+¡Las contribuciones son bienvenidas! Por favor:
+1. Haz un fork del repositorio
+2. Crea una rama para tu funcionalidad
+3. Envía un pull request
+4. Acepta licenciar tu trabajo bajo MIT (la misma licencia del resto del proyecto)
 
-**Jabir Iliyas Suraj-Deen** - original author
+## Autores
+
+**Jabir Iliyas Suraj-Deen** - autor original
 - GitHub: https://github.com/Jabir-Srj
 - Email: jabirsrj8@protonmail.com
 - Taylor's University, Kuala Lumpur, Malaysia
 
-**Sebastian Guevara M.** - SSO Mobile Launch Flow, multi-instance support
+**Sebastian Guevara M.** - SSO Mobile Launch Flow, soporte multi-instancia
 - GitHub: https://github.com/SebaG20xx
 - Email: contacto@sebag20xx.cl
 - Universidad Técnica Federico Santa María, Viña del Mar, Chile
 
 ---
 
-**GitHub:** https://github.com/Jabir-Srj/moodle-connector
-**Release:** v1.1.0 (March 26, 2026)
+**GitHub:** https://github.com/Sebastian-Alvarez/AulaVirtualSync
+**Upstream:** https://github.com/Jabir-Srj/moodle-connector
