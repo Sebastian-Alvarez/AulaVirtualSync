@@ -16,6 +16,7 @@ Ve a [python.org/downloads](https://www.python.org/downloads/) y descarga la ver
 1. Ve a la sección [**Releases**](https://github.com/Sebastian-Alvarez/AulaVirtualSync/releases/latest) de este repositorio.
 2. Baja hasta **"Assets"** y descarga el archivo `.zip` .
 <img width="238" height="127" alt="Releases-Assets-download_source_code" src="https://github.com/user-attachments/assets/883871f6-21c6-4bb5-a10e-0fca17779f5e" />
+
 3. Extrae el zip y entra a la carpeta.
 
 ### Paso 2: Configurar
