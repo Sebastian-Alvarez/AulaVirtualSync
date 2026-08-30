@@ -9,29 +9,29 @@ Esta guía asume que no sabes programar — solo necesitas seguir los pasos en o
 Si nunca has instalado Python en tu computador:
 
 Ve a [python.org/downloads](https://www.python.org/downloads/) y descarga la versión para Windows.
-* Al instalarlo, **marca la casilla que dice "Add Python to PATH"** antes de hacer clic en "Install Now"
+* Al instalarlo, **marca la casilla "Add Python to PATH"** antes de hacer clic en "Install Now"
 
 ### Paso 1: Descargar este proyecto
 
-1. Arriba en esta página, haz clic en el botón verde **"Code"** → **"Download ZIP"**.
-2. Busca el archivo `.zip` descargado y extráelo.
-3. Entra a la carpeta que se creó.
+1. Ve a la sección [**Releases**](https://github.com/Sebastian-Alvarez/AulaVirtualSync/releases/latest) de este repositorio.
+2. Baja hasta **"Assets"** y descarga el archivo `.zip` .
+<img width="238" height="127" alt="Releases-Assets-download_source_code" src="https://github.com/user-attachments/assets/883871f6-21c6-4bb5-a10e-0fca17779f5e" />
+3. Extrae el zip y entra a la carpeta.
 
 ### Paso 2: Configurar
 
-
-2. Abre `config.json` con el Bloc de notas (o cualquier IDE).
-3. Busca la línea `"url": "https://aula.usm.cl",` y reemplaza esa dirección por la de tu Aula <span style="color: grey; font-size: 0.9em;">(por defecto ya viene con la de la USM)</span>
-5. Guarda el archivo (Ctrl+S).
+1. Abre `config.json` con el Bloc de notas (o cualquier IDE).
+2. Busca la línea `"url": "https://aula.usm.cl",` y reemplaza esa dirección por la de tu Aula <span style="color: grey; font-size: 0.9em;">(por defecto ya viene con la de la USM)</span>
+3. Guarda el archivo (Ctrl+S).
 
 
 ### Paso 3: Ejecutar el programa
 
 1. Haz doble clic en `sync_files.bat`.
-3. Se abrirá una ventana negra (la terminal) la primera vez tarda unos minutos, porque instala automáticamente todo lo que necesita.
-4. En algún momento te va a pedir una **contraseña de cifrado** — esta contraseña **te la inventas tú**, no es tu clave del Aula. Sirve para proteger, en tu propio computador, la sesión guardada. **Anótala en algún lado**.
-5. Se abrirá automáticamente una ventana del navegador, inicia sesión ahí como lo haces normalmente en tu universidad (usuario, contraseña, doble factor si te lo pide). La ventana se cierra sola cuando termina.
-6. El programa empieza a descargar los archivos nuevos de tus cursos a la carpeta definida. 
+2. Se abrirá una ventana negra (la terminal) la primera vez tarda unos minutos, porque instala automáticamente todo lo que necesita.
+3. En algún momento te va a pedir una **contraseña de cifrado** — esta contraseña **te la inventas tú**, no es tu clave del Aula. Sirve para proteger, en tu propio computador, la sesión guardada. **Anótala en algún lado**.
+4. Se abrirá automáticamente una ventana del navegador, inicia sesión ahí como lo haces normalmente en tu universidad (usuario, contraseña, doble factor si te lo pide). La ventana se cierra sola cuando termina.
+5. El programa empieza a descargar los archivos nuevos de tus cursos a la carpeta definida.
 
 ### Y para la próxima vez
 
@@ -271,6 +271,10 @@ MIT - Ver el archivo LICENSE para más detalles. Eres libre de usar, modificar y
 - Email: contacto@sebag20xx.cl
 - Universidad Técnica Federico Santa María, Viña del Mar, Chile
 
+**Sebastian Alvarez Avendaño** - Sincronización automática de archivos, configuración simplificada
+- GitHub: https://github.com/Sebastian-Alvarez
+- Email: sebastian.alvarezav@usm.cl
+- Universidad Técnica Federico Santa María, Viña del Mar, Chile
 ---
 
 **GitHub:** https://github.com/Sebastian-Alvarez/AulaVirtualSync
