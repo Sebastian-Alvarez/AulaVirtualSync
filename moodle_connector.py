@@ -845,7 +845,7 @@ class MoodleConnector:
     def __init__(self, config_path: Path = CONFIG_FILE, password: Optional[str] = None):
         self.config = self._load_config(config_path)
         self.base_url = self.config["moodle"]["url"]
-        self.password = password or self._prompt_password()
+        self.password = password or self._load_stored_password() or self._prompt_password()
         self.cache = DiskCache(CACHE_DIR / "api")
 
         self.auth = MicrosoftAuthenticator(
@@ -864,10 +864,41 @@ class MoodleConnector:
         with path.open(encoding="utf-8") as f:
             return json.load(f)
 
+    _KEYRING_SERVICE = "moodle-connector"
+    _KEYRING_USERNAME = "credentials-password"
+
     def _prompt_password(self) -> str:
         """Prompt for encryption password (hidden input)."""
         import getpass
-        return getpass.getpass("Encryption password (protects stored credentials): ")
+        password = getpass.getpass("Encryption password (protects stored credentials): ")
+        self._remember_password(password)
+        return password
+
+    def _load_stored_password(self) -> Optional[str]:
+        """
+        Best-effort: look up a previously-saved password in the OS's native
+        credential store (Windows Credential Manager / macOS Keychain /
+        Linux Secret Service via the 'keyring' package). Returns None if
+        unavailable or nothing is stored — never raises.
+        """
+        try:
+            import keyring
+            return keyring.get_password(self._KEYRING_SERVICE, self._KEYRING_USERNAME)
+        except Exception:
+            return None
+
+    def _remember_password(self, password: str) -> None:
+        """
+        Best-effort: save the password in the OS's native credential store
+        (encrypted at rest, tied to your login — not a plaintext file or env
+        var) so future runs find it via _load_stored_password() and never
+        prompt again. Silently does nothing if that's not possible.
+        """
+        try:
+            import keyring
+            keyring.set_password(self._KEYRING_SERVICE, self._KEYRING_USERNAME, password)
+        except Exception:
+            pass
 
     @property
     def api(self) -> MoodleAPI:

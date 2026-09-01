@@ -30,7 +30,7 @@ Ve a [python.org/downloads](https://www.python.org/downloads/) y descarga la ver
 
 1. Haz doble clic en `sync_files.bat`.
 2. Se abrirá una ventana negra (la terminal) la primera vez tarda unos minutos, porque instala automáticamente todo lo que necesita.
-3. En algún momento te va a pedir una **contraseña de cifrado** — esta contraseña **te la inventas tú**, no es tu clave del Aula. Sirve para proteger, en tu propio computador, la sesión guardada. **Anótala en algún lado**.
+3. La **primera vez**, te va a pedir una **contraseña de cifrado** — esta contraseña no es tu clave del Aula. Sirve para proteger, en tu propio computador, la sesión guardada. El programa la guarda de forma segura (usando el gestor de credenciales de tu Sistema Operativo).
 4. Se abrirá automáticamente una ventana del navegador, inicia sesión ahí como lo haces normalmente en tu universidad (usuario, contraseña, doble factor si te lo pide). La ventana se cierra sola cuando termina.
 5. El programa empieza a descargar los archivos nuevos de tus cursos a la carpeta definida.
 
@@ -224,10 +224,11 @@ Probado con:
 
 ## Notas de seguridad
 
-- `MOODLE_CRED_PASSWORD` es **obligatorio** - sin valores por defecto hardcodeados
+- Sin valores por defecto hardcodeados para la contraseña de cifrado
 - **Sanitización de errores:** El servidor MCP sanitiza los errores, sin filtración de detalles internos
 - **Credenciales cifradas:** PBKDF2 (480K iteraciones) + cifrado Fernet
-- **Apto para headless:** Usar la variable de entorno `MOODLE_CRED_PASSWORD` para automatización
+- **Contraseña guardada de forma segura:** se pide una sola vez y se guarda en el gestor de credenciales nativo del sistema (Windows Credential Manager / macOS Keychain / Linux Secret Service vía `keyring`) — no en texto plano
+- **Apto para headless:** Usar la variable de entorno `MOODLE_CRED_PASSWORD` para automatización (tiene prioridad sobre la contraseña guardada)
 - **Seguro para git:** Nunca hacer commit de `config.json` con tokens reales
 - **Sin telemetría:** Sin transmisión de datos externos ni de logs
 
