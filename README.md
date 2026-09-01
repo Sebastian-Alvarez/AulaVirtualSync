@@ -1,45 +1,111 @@
-# Moodle Connector
+# Aula Virtual Sync
+
+## Índice
+
+[Primeros pasos](#primeros-pasos) • [Configuración](#configuración) • [Usos Alternativos](#usos-alternativos) • [Autenticación](#cómo-funciona-la-autenticación) • [Integración MCP](#integración-mcp-claude-code--opencode--openclaw) • [Notas de seguridad](#notas-de-seguridad) • [Solución de problemas](#solución-de-problemas)
 
 ## Primeros pasos
 
-Esta guía asume que no sabes programar — solo necesitas seguir los pasos en orden.
-
-#### Previamente: Instalar Python (solo la primera vez)
-
-Si nunca has instalado Python en tu computador:
-
-Ve a [python.org/downloads](https://www.python.org/downloads/) y descarga la versión para Windows.
-* Al instalarlo, **marca la casilla "Add Python to PATH"** antes de hacer clic en "Install Now"
+> [!IMPORTANT]
+>PREVIAMENTE: Instalar Python
+> Si nunca lo has instalado en tu computador:
+> https://www.python.org/downloads/ <br>
+> Al instalarlo, **marca la casilla "Add Python to PATH"** antes de hacer clic en `Install Now`
 
 ### Paso 1: Descargar este proyecto
+1. Haz click [aquí](https://github.com/Sebastian-Alvarez/AulaVirtualSync/archive/refs/tags/v1.1.0.zip) para descargar la última versión.
+   * o en [**Releases**](https://github.com/Sebastian-Alvarez/AulaVirtualSync/releases/latest) puedes ver y descarga la última versión en el archivo `.zip` .
+    <img width="400" alt="AulaVirtualSync_Asset-Download" src="https://github.com/user-attachments/assets/c7ccc64f-b67f-4d26-991f-1eaf0ff9df67" />
 
-1. Ve a la sección [**Releases**](https://github.com/Sebastian-Alvarez/AulaVirtualSync/releases/latest) de este repositorio.
-2. Baja hasta **"Assets"** y descarga el archivo `.zip` .
-<img width="238" height="127" alt="Releases-Assets-download_source_code" src="https://github.com/user-attachments/assets/883871f6-21c6-4bb5-a10e-0fca17779f5e" />
+2. Extrae el zip y entra a la carpeta.
 
-3. Extrae el zip y entra a la carpeta.
-
-### Paso 2: Configurar
-
-1. Abre `config.json` con el Bloc de notas (o cualquier IDE).
-2. Busca la línea `"url": "https://aula.usm.cl",` y reemplaza esa dirección por la de tu Aula <span style="color: grey; font-size: 0.9em;">(por defecto ya viene con la de la USM)</span>
-3. Guarda el archivo (Ctrl+S).
-
-
-### Paso 3: Ejecutar el programa
+### Paso 2: Ejecutar el programa
 
 1. Haz doble clic en `sync_files.bat`.
-2. Se abrirá una ventana negra (la terminal) la primera vez tarda unos minutos, porque instala automáticamente todo lo que necesita.
-3. La **primera vez**, te va a pedir una **contraseña de cifrado** — esta contraseña no es tu clave del Aula. Sirve para proteger, en tu propio computador, la sesión guardada. El programa la guarda de forma segura (usando el gestor de credenciales de tu Sistema Operativo).
-4. Se abrirá automáticamente una ventana del navegador, inicia sesión ahí como lo haces normalmente en tu universidad (usuario, contraseña, doble factor si te lo pide). La ventana se cierra sola cuando termina.
+2. Se abrirá una ventana negra (la terminal) 
+    > La primera vez tarda unos minutos, porque instala automáticamente todo lo que necesita.
+3. Se le pedirá una **contraseña de cifrado**, esta contraseña no es tu clave del Aula. Sirve para proteger la sesión guardada. El programa la guarda de forma segura (usando el gestor de credenciales de tu Sistema Operativo).
+4. Se abrirá automáticamente una ventana del navegador, inicia sesión ahí como lo haces normalmente en la web (usuario, contraseña, doble factor si te lo pide). La ventana se cierra sola cuando termina.
+    > Si obtienes fallos en esta parte, puedes probar el [método alternativo para obtener el token](#método-alternativo-al-token).
 5. El programa empieza a descargar los archivos nuevos de tus cursos a la carpeta definida.
 
 ### Y para la próxima vez
 
-Solo repite el **Paso 3** 
-Doble clic en `sync_files.bat`. Como ya quedó todo instalado y configurado, va a ser mucho más rápido, y solo descarga los archivos que sean nuevos.
+Solo repite el **Paso 2**: Doble clic en `sync_files.bat`. <br>
+Como ya quedó todo instalado y configurado, va a ser mucho más rápido, y solo descarga los archivos que sean nuevos.
 
 ---
+
+## Configuración
+
+Toda configuración/personalización se hace en [`config.json`](config.json).
+
+<details>
+<summary><h3>Cambiar sitio web del Aula Virtual</h3></summary>
+
+Cambia el valor del `url`:
+```json
+    "url": "https://tu-sitio.com",
+```
+    
+</details>
+
+<details>
+<summary><h3> Para cambiar el carpeta de destino </h3></summary>
+
+Cambia el valor de `directorio_descargas`, ejemplo:
+
+```json
+        "directorio_descargas": "C:/Users/icapaz/Downloads"
+```
+
+> **Tip:** Puedes dejarlo en tu Onedrive si tienes la app de escritorio descargada.<br>
+> Para esto solo cambia el valor a "%OneDrive%/*Tu carpeta*"
+    
+</details>
+
+<details>
+<summary><h3> Para cambiar nombre de carpetas por Curso </h3></summary>
+
+Agrega el nombre del ramo seguido de el nombre que quieres que quede (abreviación o lo que sea).<br>
+"Ramo": "nombre que quieras"
+
+```json
+    "carpetas_por_curso": {
+      "GESTION DEL EMPRENDIMIENTO": "GE",
+      "INGENIERIA DE SOFTWARE": "IS"
+    }
+```
+    
+</details>
+
+<details>
+<summary><h3> Archivos Ignorados</h3> </summary>
+
+Muchas veces el Aula hay archivos basura, estos se pueden ignorar agregandolos a `archivos_ignorados` de la siguiente forma:
+
+```json
+    "archivos_ignorados": ["Programa-de-estudio.pdf", "CREACIÓN DE CUESTIONARIO.docx", "Presentación_DEO_05-08.pdf"],
+```
+    
+</details>
+
+<details>
+<summary><h3> Filtro por Semestre</h3> </summary>
+
+Para no descargar todo el contenido de ramos antiguos se puede filtrar por semestre.<br>
+Esto funciona ya que los ramos en aula suelen tener el año o semestre en el nombre. 
+Por lo que este filtro depende de la configuración que le da tu universidad al nombre de los ramos.
+
+```json
+    "semestre": "2026-2",
+```
+    
+</details>
+
+---
+
+## Usos Alternativos
 
 Si prefieres usar la terminal directamente en vez del `.bat`, o quieres explorar otras opciones (consultar notas desde la línea de comandos, usarlo como librería de Python, integrarlo con Claude Code), sigue leyendo:
 
@@ -47,8 +113,6 @@ Si prefieres usar la terminal directamente en vez del `.bat`, o quieres explorar
 - **[CLI](#cli)** — consulta cursos, notas, tareas, fechas límite desde la terminal
 - **[Librería Python](#librería-python)** — úsalo dentro de tus propios scripts
 - **[Integración MCP](#integración-mcp-claude-code--opencode--openclaw)** — úsalo como herramienta desde Claude Code / OpenCode
-
-## Uso
 
 ### Sincronización automática por curso
 
@@ -61,12 +125,7 @@ python course_sync.py                   # sincronizar todo
 python course_sync.py --course mi-clave # sincronizar solo un curso
 ```
 
-Se configura bajo `descargas` en `config.json` (todos estos campos son opcionales):
-- `directorio_descargas` — carpeta local de destino. Soporta rutas con `%OneDrive%` si la escribes tú; si se deja vacío, usa `./downloads` dentro del proyecto.
-- `semestre` — ej. `"2026-2"`. Si se define, solo sincroniza cursos cuyo nombre en Moodle contenga el código `AAAANN` correspondiente. Si se omite, sincroniza todos los cursos inscritos.
-- `carpetas_por_curso` — palabra clave del nombre del curso → carpeta local.
-- `archivos_ignorados` — patrones glob para ignorar archivos por nombre.
-- `dominios_acceso_directo` — dominios adicionales (además de SharePoint/Drive/YouTube/etc.) que siempre se guardan como acceso directo `.url`.
+Se configura en la sección [Configuración](#configuración).
 
 Los links externos que parecen archivos reales (según su `Content-Type`) se descargan directo; el resto se guarda como acceso directo `.url`.
 
@@ -107,46 +166,7 @@ content = connector.summary()
 # Descarga con caché
 file_content = connector.download("https://...")
 ```
-
-## Características
-
-**Acceso completo a la API de Moodle**
-- Listar cursos, consultar notas, seguir tareas
-- Obtener materiales, fechas límite, anuncios
-- Descargar archivos con caché agresiva
-
-**Soporte SSO / MFA**
-- Mobile Launch Flow automatizado (el mismo que usa la app oficial de Moodle)
-- Compatible con cualquier proveedor SSO: Microsoft Azure AD, Google, SAML, etc.
-- El navegador se abre para el login interactivo y se cierra automáticamente al capturar el token
-
-**Múltiples modos de integración**
-- **CLI:** `python moodle_connector.py courses`
-- **Librería Python:** `from moodle_connector import MoodleConnector`
-- **Protocolo MCP:** Integración nativa con Claude Code, OpenCode y OpenClaw
-
-**Descarga automática**
-- `course_sync.py` auto-descubre archivos por curso inscrito, cero mantenimiento manual de listas
-
-**Seguridad**
-- Credenciales cifradas (PBKDF2 + Fernet)
-- Gestión de tokens integrada
-- Sin secretos en el historial de git
-- Licencia MIT
-
-## Tampermonkey Token Helper
-
-Si el conector corre en un servidor headless (sin pantalla), obtén el token desde un PC o Mac con navegador y copialo al servidor. Instala el userscript incluido en esa máquina:
-
-1. Instala [Tampermonkey](https://www.tampermonkey.net/) en tu navegador
-2. Abre Tampermonkey - Crear nuevo script - pega el contenido de [`moodle_token_helper.user.js`](moodle_token_helper.user.js)
-3. Navega a tu sitio Moodle con sesion activa
-4. Haz click en el boton **"Get Token"** (esquina inferior derecha)
-5. Copia el token y pegalo en `config.json` bajo `token`
-
-El script usa `GM_xmlhttpRequest` para llamar al endpoint Mobile Launch con tus cookies de sesion activas e intercepta el redirect `moodlemobile://` sin salir de la pagina.
-
-Para agregar otras instancias Moodle, agrega lineas `@match` y `@connect` en el header del script.
+---
 
 ## Cómo funciona la autenticación
 
@@ -161,7 +181,30 @@ Este conector usa el **Mobile Launch Flow** de Moodle, el mismo mecanismo que us
 
 El token se guarda en un archivo cifrado (`credentials.enc`) y se reutiliza hasta que el servidor lo rechaza.
 
+<a id="método-alternativo-al-token"></a>
+<details>
+<summary><h3>Método alternativo a obtención del token</h3></summary>
+
+**Tampermonkey Token Helper**<br>
+Si el método anterior no funciona o si quieres usarlo en un entorno headless (sin monitor)
+
+1. Instala [Tampermonkey](https://www.tampermonkey.net/) en tu navegador
+2. Abre Tampermonkey - Crear nuevo script - pega el contenido de [`moodle_token_helper.user.js`](moodle_token_helper.user.js)
+3. Navega a tu sitio Moodle con sesion activa
+4. Haz click en el boton **"Get Token"** (esquina inferior derecha)
+5. Copia el token y pegalo en `config.json` bajo `token`
+
+El script usa `GM_xmlhttpRequest` para llamar al endpoint Mobile Launch con tus cookies de sesion activas e intercepta el redirect `moodlemobile://` sin salir de la pagina.
+
+Para agregar otras instancias Moodle, agrega lineas `@match` y `@connect` en el header del script.
+</details>
+
+---
+
 ## Integración MCP (Claude Code / OpenCode / OpenClaw)
+
+> [!CAUTION]
+> Esta funcionalidad viene del fork original — las funciones agregadas en este repositorio no están integradas en el funcionamiento del MCP.
 
 **REQUERIDO:** Configurar la variable de entorno `MOODLE_CRED_PASSWORD` antes de iniciar Claude Code.
 
@@ -193,27 +236,7 @@ Reiniciar Claude Code. Las 8 funciones de Moodle estarán disponibles como herra
 - `download(url, output?)` - Descargar archivos
 - `summary()` - Exportación completa de datos
 
-## Referencia de configuración
-
-### Token de Moodle (`config.json`)
-```json
-{
-  "moodle": {
-    "url": "https://tu-moodle.ejemplo.com",
-    "token": ""
-  }
-}
-```
-
-Dejar `token` vacío para usar el flujo SSO automatizado. Completarlo manualmente solo si ya tienes un token.
-
-## Requisitos
-
-- Python 3.10+
-- requests ≥2.31.0
-- cryptography ≥41.0.0
-- playwright ≥1.40.0
-- mcp ≥0.1.0 (para el servidor MCP)
+---
 
 ## Instancias de Moodle compatibles
 
@@ -221,6 +244,8 @@ Probado con:
 - Taylor's University (mytimes.taylors.edu.my)
 - Universidad Técnica Federico Santa María (aula.usm.cl)
 - Debería funcionar con cualquier instancia Moodle 3.x+
+
+---
 
 ## Notas de seguridad
 
@@ -231,6 +256,8 @@ Probado con:
 - **Apto para headless:** Usar la variable de entorno `MOODLE_CRED_PASSWORD` para automatización (tiene prioridad sobre la contraseña guardada)
 - **Seguro para git:** Nunca hacer commit de `config.json` con tokens reales
 - **Sin telemetría:** Sin transmisión de datos externos ni de logs
+
+---
 
 ## Solución de problemas
 
@@ -248,6 +275,8 @@ Eliminar `credentials.enc` y ejecutar `python moodle_connector.py login` nuevame
 
 ### Descarga de archivo detenida
 Verifica tu conexión a internet. Aumentar el timeout en el código o limpiar la caché: `rm -rf cache/`
+
+---
 
 ## Licencia
 
@@ -277,6 +306,7 @@ MIT - Ver el archivo LICENSE para más detalles. Eres libre de usar, modificar y
 - GitHub: https://github.com/Sebastian-Alvarez
 - Email: sebastian.alvarezav@usm.cl
 - Universidad Técnica Federico Santa María, Viña del Mar, Chile
+
 ---
 
 **GitHub:** https://github.com/Sebastian-Alvarez/AulaVirtualSync
